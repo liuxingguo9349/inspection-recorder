@@ -1,0 +1,16 @@
+{
+  "name": "问题记录",
+  "short_name": "问题记录",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f4",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

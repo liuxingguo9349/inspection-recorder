@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>问题记录</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css?v=7" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="app-mark" aria-hidden="true"><i data-lucide="clipboard-list"></i></span>
+          <div>
+            <h1>问题记录</h1>
+            <p id="statusLine">本地保存</p>
+          </div>
+        </div>
+        <div class="top-actions" aria-label="数据操作">
+          <button class="icon-button" id="backupBtn" type="button" title="备份数据">
+            <i data-lucide="database-backup"></i>
+            <span>备份</span>
+          </button>
+          <label class="icon-button file-action" for="restoreInput" title="恢复数据">
+            <i data-lucide="upload"></i>
+            <span>恢复</span>
+          </label>
+          <input id="restoreInput" class="sr-only" type="file" accept="application/json" />
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="editor-panel" aria-labelledby="editorTitle">
+          <div class="panel-heading">
+            <h2 id="editorTitle">新增记录</h2>
+            <button class="ghost-button" id="newRecordBtn" type="button" title="新建">
+              <i data-lucide="plus"></i>
+              <span>新建</span>
+            </button>
+          </div>
+
+          <form id="issueForm" autocomplete="off">
+            <input id="recordId" type="hidden" />
+
+            <div class="form-grid">
+              <label class="field">
+                <span>问题类型</span>
+                <select id="typeSelect" required>
+                  <option value="市政">市政</option>
+                  <option value="市容">市容</option>
+                  <option value="环卫">环卫</option>
+                  <option value="绿化">绿化</option>
+                  <option value="执法">执法</option>
+                  <option value="其他">其他</option>
+                </select>
+              </label>
+
+              <label class="field">
+                <span>记录时间</span>
+                <input id="recordTime" type="datetime-local" />
+              </label>
+
+              <label class="field field-wide">
+                <span>问题简要描述</span>
+                <textarea id="description" rows="4" maxlength="500" placeholder="填写问题位置、现象或处理要点"></textarea>
+              </label>
+
+              <div class="field field-wide photo-field">
+                <span>问题照片</span>
+                <div class="photo-box">
+                  <img id="issuePhotoPreview" alt="问题照片预览" hidden />
+                  <div class="photo-empty" id="issuePhotoEmpty">
+                    <i data-lucide="image-plus"></i>
+                    <span>未选择照片</span>
+                  </div>
+                </div>
+                <div class="photo-actions">
+                  <label class="primary-button file-action" for="issuePhotoInput" title="拍照或选择问题照片">
+                    <i data-lucide="camera"></i>
+                    <span>拍照/选图</span>
+                  </label>
+                  <button class="ghost-button" id="removeIssuePhotoBtn" type="button" title="移除问题照片">
+                    <i data-lucide="image-off"></i>
+                    <span>移除</span>
+                  </button>
+                  <input id="issuePhotoInput" class="sr-only" type="file" accept="image/*" capture="environment" />
+                </div>
+              </div>
+
+              <label class="field field-wide">
+                <span>备注</span>
+                <textarea id="remarks" rows="3" maxlength="500" placeholder="填写处理情况、补充说明，可留空"></textarea>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button class="primary-button" id="saveBtn" type="submit">
+                <i data-lucide="save"></i>
+                <span>保存记录</span>
+              </button>
+              <button class="ghost-button" id="resetBtn" type="button">
+                <i data-lucide="rotate-ccw"></i>
+                <span>重置</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="list-panel" aria-labelledby="listTitle">
+          <div class="panel-heading list-heading">
+            <div>
+              <h2 id="listTitle">记录列表</h2>
+              <p id="recordCount">0 条</p>
+            </div>
+            <button class="primary-button" id="exportBtn" type="button" title="导出选中记录">
+              <i data-lucide="file-spreadsheet"></i>
+              <span>导出选中</span>
+            </button>
+          </div>
+
+          <div class="list-controls">
+            <label class="search-field">
+              <i data-lucide="search"></i>
+              <input id="searchInput" type="search" placeholder="搜索描述" />
+            </label>
+            <select id="filterType" title="筛选类型">
+              <option value="全部">全部</option>
+              <option value="市政">市政</option>
+              <option value="市容">市容</option>
+              <option value="环卫">环卫</option>
+              <option value="绿化">绿化</option>
+              <option value="执法">执法</option>
+              <option value="其他">其他</option>
+            </select>
+            <div class="select-actions">
+              <button class="ghost-button" id="selectAllBtn" type="button">
+                <i data-lucide="check-square"></i>
+                <span>全选</span>
+              </button>
+              <button class="ghost-button" id="clearSelectBtn" type="button">
+                <i data-lucide="square"></i>
+                <span>取消</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="record-list" id="recordList" aria-live="polite"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="./assets/exceljs.min.js"></script>
+    <script src="./assets/lucide.min.js"></script>
+    <script src="./app.js?v=7"></script>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="问题记录">
+  <rect width="128" height="128" rx="24" fill="#0f766e"/>
+  <rect x="30" y="22" width="68" height="84" rx="10" fill="#ffffff"/>
+  <rect x="45" y="16" width="38" height="18" rx="7" fill="#d97706"/>
+  <path d="M42 53h44M42 70h34M42 87h27" stroke="#0f766e" stroke-width="8" stroke-linecap="round"/>
+</svg>
