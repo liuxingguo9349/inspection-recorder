@@ -246,6 +246,7 @@ textarea:focus {
     linear-gradient(-45deg, rgba(15, 118, 110, 0.06) 25%, transparent 25%),
     #fbfcfb;
   background-size: 18px 18px;
+  cursor: pointer;
 }
 
 .photo-box img {
@@ -253,6 +254,11 @@ textarea:focus {
   height: 100%;
   object-fit: contain;
   background: #f1f4f2;
+}
+
+.photo-box:focus-visible {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
 }
 
 .photo-empty {
@@ -788,7 +794,7 @@ button:disabled {
   }
 
   .select-actions {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .record-list {

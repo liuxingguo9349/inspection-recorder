@@ -39,6 +39,7 @@
     recordTime: document.getElementById("recordTime"),
     description: document.getElementById("description"),
     remarks: document.getElementById("remarks"),
+    issuePhotoBox: document.getElementById("issuePhotoBox"),
     issuePhotoInput: document.getElementById("issuePhotoInput"),
     issuePhotoPreview: document.getElementById("issuePhotoPreview"),
     issuePhotoEmpty: document.getElementById("issuePhotoEmpty"),
@@ -53,6 +54,7 @@
     exportBtn: document.getElementById("exportBtn"),
     selectAllBtn: document.getElementById("selectAllBtn"),
     clearSelectBtn: document.getElementById("clearSelectBtn"),
+    deleteSelectedBtn: document.getElementById("deleteSelectedBtn"),
     searchInput: document.getElementById("searchInput"),
     filterType: document.getElementById("filterType"),
     backupBtn: document.getElementById("backupBtn"),
@@ -78,6 +80,13 @@
     els.form.addEventListener("submit", handleSave);
     els.resetBtn.addEventListener("click", clearForm);
     els.newRecordBtn.addEventListener("click", clearForm);
+    els.issuePhotoBox.addEventListener("click", () => els.issuePhotoInput.click());
+    els.issuePhotoBox.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        els.issuePhotoInput.click();
+      }
+    });
     els.issuePhotoInput.addEventListener("change", (event) => handlePhotoChange(event, "issue"));
     els.removeIssuePhotoBtn.addEventListener("click", () => clearDraftPhoto("issue"));
     els.recordList.addEventListener("click", handleRecordListClick);
@@ -86,6 +95,7 @@
     els.filterType.addEventListener("change", renderRecords);
     els.selectAllBtn.addEventListener("click", selectVisibleRecords);
     els.clearSelectBtn.addEventListener("click", clearSelection);
+    els.deleteSelectedBtn.addEventListener("click", deleteSelectedRecords);
     els.exportBtn.addEventListener("click", exportSelectedRecords);
     els.mobileExportBtn.addEventListener("click", exportSelectedRecords);
     els.mobileTabButtons.forEach((button) => {
@@ -171,7 +181,6 @@
     saveSelection();
     clearForm();
     await refreshRecords();
-    switchMobileTab("list");
     showToast("记录和照片已保存到浏览器本地库");
   }
 
@@ -327,6 +336,7 @@
     els.statusLine.textContent = `浏览器本地库 ${state.records.length} 条`;
     els.exportBtn.disabled = selectedCount === 0;
     els.mobileExportBtn.disabled = selectedCount === 0;
+    els.deleteSelectedBtn.disabled = selectedCount === 0;
     updateMobileTabs();
     renderIcons();
   }
@@ -438,6 +448,23 @@
     state.selectedIds.clear();
     saveSelection();
     renderRecords();
+  }
+
+  async function deleteSelectedRecords() {
+    const selected = state.records.filter((record) => state.selectedIds.has(record.id));
+    if (!selected.length) {
+      showToast("先选择要删除的记录");
+      return;
+    }
+    const ok = window.confirm(`删除选中的 ${selected.length} 条记录？`);
+    if (!ok) return;
+    for (const record of selected) {
+      await deleteRecord(record.id);
+    }
+    state.selectedIds.clear();
+    saveSelection();
+    await refreshRecords();
+    showToast(`已删除 ${selected.length} 条记录`);
   }
 
   async function exportSelectedRecords() {

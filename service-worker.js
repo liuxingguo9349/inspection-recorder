@@ -1,9 +1,9 @@
-const CACHE_NAME = "inspection-recorder-v9";
+const CACHE_NAME = "inspection-recorder-v10";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=9",
-  "./app.js?v=9",
+  "./styles.css?v=10",
+  "./app.js?v=10",
   "./manifest.webmanifest",
   "./assets/icon.svg",
   "./assets/template.xlsx",

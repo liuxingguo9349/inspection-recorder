@@ -7,7 +7,7 @@
     <title>问题记录</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=9" />
+    <link rel="stylesheet" href="./styles.css?v=10" />
   </head>
   <body data-mobile-tab="form">
     <div class="app-shell">
@@ -70,7 +70,7 @@
 
               <div class="field field-wide photo-field">
                 <span>问题照片</span>
-                <div class="photo-box">
+                <div class="photo-box" id="issuePhotoBox" role="button" tabindex="0" aria-label="拍照或选择问题照片">
                   <img id="issuePhotoPreview" alt="问题照片预览" hidden />
                   <div class="photo-empty" id="issuePhotoEmpty">
                     <i data-lucide="image-plus"></i>
@@ -144,6 +144,10 @@
                 <i data-lucide="square"></i>
                 <span>取消</span>
               </button>
+              <button class="ghost-button is-danger" id="deleteSelectedBtn" type="button">
+                <i data-lucide="trash-2"></i>
+                <span>删除选中</span>
+              </button>
             </div>
           </div>
 
@@ -171,6 +175,6 @@
 
     <script src="./assets/exceljs.min.js"></script>
     <script src="./assets/lucide.min.js"></script>
-    <script src="./app.js?v=9"></script>
+    <script src="./app.js?v=10"></script>
   </body>
 </html>
