@@ -492,8 +492,8 @@ textarea:focus {
 
 .toast {
   position: fixed;
+  top: 18px;
   right: 18px;
-  bottom: 18px;
   z-index: 10;
   max-width: min(420px, calc(100% - 36px));
   padding: 12px 14px;
@@ -504,7 +504,7 @@ textarea:focus {
   box-shadow: var(--shadow);
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px);
+  transform: translateY(-8px);
   transition:
     opacity 0.18s ease,
     transform 0.18s ease;
@@ -918,8 +918,8 @@ button:disabled {
   }
 
   .toast {
+    top: calc(64px + env(safe-area-inset-top));
     right: 12px;
-    bottom: calc(86px + env(safe-area-inset-bottom));
     left: 12px;
     max-width: none;
   }
