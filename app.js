@@ -5,6 +5,7 @@
   const DB_VERSION = 1;
   const STORE_NAME = "records";
   const SELECTION_KEY = "inspection-recorder-selection";
+  const MOBILE_TAB_KEY = "inspection-recorder-mobile-tab";
   const TEMPLATE_URL = "./assets/template.xlsx";
   const TYPES = ["市政", "市容", "环卫", "绿化", "执法", "其他"];
   const IMAGE_MAX_EDGE = 1800;
@@ -56,6 +57,8 @@
     filterType: document.getElementById("filterType"),
     backupBtn: document.getElementById("backupBtn"),
     restoreInput: document.getElementById("restoreInput"),
+    mobileExportBtn: document.getElementById("mobileExportBtn"),
+    mobileTabButtons: document.querySelectorAll("[data-mobile-tab]"),
     toast: document.getElementById("toast"),
   };
 
@@ -84,6 +87,10 @@
     els.selectAllBtn.addEventListener("click", selectVisibleRecords);
     els.clearSelectBtn.addEventListener("click", clearSelection);
     els.exportBtn.addEventListener("click", exportSelectedRecords);
+    els.mobileExportBtn.addEventListener("click", exportSelectedRecords);
+    els.mobileTabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchMobileTab(button.dataset.mobileTab));
+    });
     els.backupBtn.addEventListener("click", exportBackup);
     els.restoreInput.addEventListener("change", importBackup);
   }
@@ -164,6 +171,7 @@
     saveSelection();
     clearForm();
     await refreshRecords();
+    switchMobileTab("list");
     showToast("记录和照片已保存到浏览器本地库");
   }
 
@@ -257,6 +265,7 @@
     renderPhotoPreview("issue", state.draftIssuePhotoDataUrl);
     els.editorTitle.textContent = "编辑记录";
     els.saveBtn.querySelector("span").textContent = "保存修改";
+    switchMobileTab("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -272,6 +281,7 @@
     setDefaultTime();
     els.editorTitle.textContent = "新增记录";
     els.saveBtn.querySelector("span").textContent = "保存记录";
+    switchMobileTab("form");
   }
 
   function setDefaultTime() {
@@ -316,7 +326,27 @@
     els.recordCount.textContent = `${state.records.length} 条，已选 ${selectedCount} 条`;
     els.statusLine.textContent = `浏览器本地库 ${state.records.length} 条`;
     els.exportBtn.disabled = selectedCount === 0;
+    els.mobileExportBtn.disabled = selectedCount === 0;
+    updateMobileTabs();
     renderIcons();
+  }
+
+  function switchMobileTab(tab) {
+    const nextTab = tab === "list" ? "list" : "form";
+    document.body.dataset.mobileTab = nextTab;
+    localStorage.setItem(MOBILE_TAB_KEY, nextTab);
+    updateMobileTabs();
+    if (window.matchMedia("(max-width: 720px)").matches) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }
+
+  function updateMobileTabs() {
+    const current = document.body.dataset.mobileTab || localStorage.getItem(MOBILE_TAB_KEY) || "form";
+    document.body.dataset.mobileTab = current === "list" ? "list" : "form";
+    els.mobileTabButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.mobileTab === document.body.dataset.mobileTab);
+    });
   }
 
   function createRecordCard(rawRecord) {

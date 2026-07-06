@@ -509,6 +509,10 @@ textarea:focus {
   transform: translateY(0);
 }
 
+.mobile-tabbar {
+  display: none;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -626,5 +630,291 @@ button:disabled {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
+  }
+}
+
+@media (max-width: 720px) {
+  html,
+  body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  body {
+    background: var(--bg);
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: none;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0 0 calc(74px + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(244, 246, 244, 0.96);
+    backdrop-filter: blur(10px);
+  }
+
+  .brand {
+    flex: 1 1 auto;
+  }
+
+  .app-mark {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  #statusLine {
+    font-size: 12px;
+  }
+
+  .top-actions {
+    flex: 0 0 auto;
+    width: auto;
+    gap: 6px;
+  }
+
+  .top-actions .icon-button {
+    width: 42px;
+    min-height: 38px;
+    flex: 0 0 auto;
+    padding: 0;
+  }
+
+  .top-actions .icon-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .workspace {
+    display: block;
+    width: 100%;
+  }
+
+  .editor-panel,
+  .list-panel {
+    width: 100%;
+    min-height: calc(100dvh - 58px - 74px - env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: var(--surface);
+  }
+
+  body[data-mobile-tab="form"] .list-panel,
+  body[data-mobile-tab="list"] .editor-panel {
+    display: none;
+  }
+
+  body[data-mobile-tab="form"] .editor-panel,
+  body[data-mobile-tab="list"] .list-panel {
+    display: block;
+  }
+
+  .panel-heading {
+    flex-direction: row;
+    align-items: center;
+    padding: 12px;
+  }
+
+  .list-heading {
+    align-items: center;
+  }
+
+  .list-heading #exportBtn {
+    display: none;
+  }
+
+  form {
+    padding: 12px;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  textarea {
+    min-height: 86px;
+  }
+
+  .photo-box {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+
+  .photo-actions,
+  .form-actions,
+  .select-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .form-actions {
+    margin-top: 12px;
+  }
+
+  .photo-actions > *,
+  .form-actions > *,
+  .select-actions > * {
+    width: 100%;
+  }
+
+  .list-controls {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .select-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .record-list {
+    gap: 12px;
+    padding: 12px 12px 18px;
+  }
+
+  .record-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    grid-template-areas:
+      "check thumb"
+      "body body"
+      "actions actions";
+    gap: 10px;
+    width: 100%;
+    min-height: 0;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  .record-check {
+    grid-area: check;
+    align-items: start;
+    justify-items: center;
+    padding-top: 8px;
+  }
+
+  .record-check input {
+    width: 24px;
+    height: 24px;
+  }
+
+  .record-thumb {
+    grid-area: thumb;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 42dvh;
+    border-radius: 8px;
+  }
+
+  .record-body {
+    grid-area: body;
+    gap: 8px;
+  }
+
+  .record-meta {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .type-pill,
+  .photo-badge,
+  .time-text {
+    white-space: nowrap;
+  }
+
+  .description-text {
+    display: block;
+    overflow: visible;
+    line-height: 1.5;
+    -webkit-line-clamp: initial;
+  }
+
+  .record-actions {
+    grid-area: actions;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .record-actions .ghost-button {
+    width: 100%;
+    min-height: 42px;
+    padding: 0;
+  }
+
+  .mobile-tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -10px 30px rgba(29, 43, 38, 0.08);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobile-tab-button {
+    display: grid;
+    min-height: 54px;
+    place-items: center;
+    gap: 3px;
+    border: 0;
+    border-radius: 8px;
+    color: var(--muted);
+    background: transparent;
+    font-size: 12px;
+  }
+
+  .mobile-tab-button svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .mobile-tab-button.is-active {
+    color: var(--primary);
+    background: var(--primary-soft);
+    font-weight: 700;
+  }
+
+  .mobile-tab-button:disabled {
+    opacity: 0.45;
+  }
+
+  .toast {
+    right: 12px;
+    bottom: calc(86px + env(safe-area-inset-bottom));
+    left: 12px;
+    max-width: none;
   }
 }

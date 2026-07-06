@@ -7,9 +7,9 @@
     <title>问题记录</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=9" />
   </head>
-  <body>
+  <body data-mobile-tab="form">
     <div class="app-shell">
       <header class="topbar">
         <div class="brand">
@@ -152,10 +152,25 @@
       </main>
     </div>
 
+    <nav class="mobile-tabbar" aria-label="底部导航">
+      <button class="mobile-tab-button" type="button" data-mobile-tab="form">
+        <i data-lucide="plus-circle"></i>
+        <span>新增</span>
+      </button>
+      <button class="mobile-tab-button" type="button" data-mobile-tab="list">
+        <i data-lucide="list-checks"></i>
+        <span>记录</span>
+      </button>
+      <button class="mobile-tab-button" id="mobileExportBtn" type="button" data-mobile-action="export">
+        <i data-lucide="file-spreadsheet"></i>
+        <span>导出</span>
+      </button>
+    </nav>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./assets/exceljs.min.js"></script>
     <script src="./assets/lucide.min.js"></script>
-    <script src="./app.js?v=7"></script>
+    <script src="./app.js?v=9"></script>
   </body>
 </html>
