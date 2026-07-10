@@ -18,8 +18,7 @@
     headerRow: 2,
     firstDataRow: 3,
     issuePhotoColumn: 4,
-    // 留 1px 给单元格边框；改成 0 就会完全贴边。
-    photoPaddingPx: 1,
+    photoPaddingPx: 2,
   };
 
   const state = {
@@ -499,7 +498,7 @@
 
       const warnings = [];
       stage = "填充 Excel";
-      await buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
+      buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
       stage = "生成 Excel 文件";
       let buffer;
       try {
@@ -509,7 +508,7 @@
         warnings.push("模板写出失败，已改用备用样式");
         workbook = createFallbackWorkbook();
         sheet = workbook.worksheets[0];
-        await buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
+        buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
         buffer = await workbook.xlsx.writeBuffer();
       }
       const filename = `达沃斯重点保障区域市容整治包保检查问题-${formatFileDate(new Date())}.xlsx`;
@@ -571,14 +570,13 @@
     return workbook;
   }
 
-  async function buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings = []) {
+  function buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings = []) {
     const templateRows = captureTemplateRows(sheet);
     clearTemplateImages(workbook, sheet);
     trimSurplusTemplateRows(sheet, selected.length, templateRows.length);
     applyFixedSheetTypography(sheet, selected.length);
 
-    for (let index = 0; index < selected.length; index += 1) {
-      const record = selected[index];
+    selected.forEach((record, index) => {
       const rowNumber = EXPORT_LAYOUT.firstDataRow + index;
       const row = sheet.getRow(rowNumber);
       applyTemplateRow(row, templateRows[Math.min(index, templateRows.length - 1)]);
@@ -592,7 +590,7 @@
 
       if (record.issuePhotoDataUrl) {
         try {
-          await addPhotoToSheet(
+          addPhotoToSheet(
             workbook,
             sheet,
             record.issuePhotoDataUrl,
@@ -605,12 +603,9 @@
           warnings.push(`第 ${index + 1} 张照片插入失败，已跳过`);
         }
       }
-    }
+    });
 
-    const lastRow = Math.max(
-      EXPORT_LAYOUT.firstDataRow,
-      EXPORT_LAYOUT.firstDataRow + selected.length - 1,
-    );
+    const lastRow = Math.max(EXPORT_LAYOUT.firstDataRow, EXPORT_LAYOUT.firstDataRow + selected.length - 1);
     sheet.autoFilter = `A${EXPORT_LAYOUT.headerRow}:F${lastRow}`;
     sheet.pageSetup.printArea = `A1:F${lastRow}`;
   }
@@ -675,84 +670,28 @@
     return `${EXPORT_TITLE_PREFIX}\n（${formatMonthDay(date)}）`;
   }
 
-  async function addPhotoToSheet(workbook, sheet, dataUrl, rowNumber, excelColumn, dimensions) {
+  function addPhotoToSheet(workbook, sheet, dataUrl, rowNumber, excelColumn, dimensions) {
     if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
       throw new Error("照片数据格式不正确");
     }
-
-    const boxWidth = columnWidthToPixels(sheet.getColumn(excelColumn).width);
-    const boxHeight = rowHeightToPixels(sheet.getRow(rowNumber).height);
-    const padding = EXPORT_LAYOUT.photoPaddingPx;
-    const targetWidth = Math.max(1, Math.round(boxWidth - padding * 2));
-    const targetHeight = Math.max(1, Math.round(boxHeight - padding * 2));
-
-    // 等比例居中裁剪，效果相当于 CSS 的 object-fit: cover。
-    // 横图主要裁掉左右，竖图主要裁掉上下，不会拉伸变形。
-    const croppedDataUrl = await cropImageToCell(dataUrl, targetWidth, targetHeight);
+    const extension = dataUrl.includes("image/png") ? "png" : "jpeg";
     const imageId = workbook.addImage({
-      base64: croppedDataUrl,
-      extension: "jpeg",
+      base64: dataUrl,
+      extension,
     });
 
+    // 直接把完整照片拉伸到单元格的四条边：不裁剪、不留白。
+    // 这里使用单元格坐标作为右下锚点，因此不会改变任何行高、列宽或表格样式。
     sheet.addImage(imageId, {
       tl: {
-        col: excelColumn - 1 + padding / boxWidth,
-        row: rowNumber - 1 + padding / boxHeight,
+        col: excelColumn - 1,
+        row: rowNumber - 1,
       },
-      ext: {
-        width: targetWidth,
-        height: targetHeight,
+      br: {
+        col: excelColumn,
+        row: rowNumber,
       },
-      editAs: "oneCell",
     });
-  }
-
-  async function cropImageToCell(dataUrl, targetWidth, targetHeight) {
-    const image = await loadImageElement(dataUrl);
-    const sourceWidth = Math.max(1, image.naturalWidth || image.width || 1);
-    const sourceHeight = Math.max(1, image.naturalHeight || image.height || 1);
-    const sourceRatio = sourceWidth / sourceHeight;
-    const targetRatio = targetWidth / targetHeight;
-
-    let sourceX = 0;
-    let sourceY = 0;
-    let cropWidth = sourceWidth;
-    let cropHeight = sourceHeight;
-
-    if (sourceRatio > targetRatio) {
-      cropWidth = sourceHeight * targetRatio;
-      sourceX = (sourceWidth - cropWidth) / 2;
-    } else if (sourceRatio < targetRatio) {
-      cropHeight = sourceWidth / targetRatio;
-      sourceY = (sourceHeight - cropHeight) / 2;
-    }
-
-    // 以 2 倍像素绘制，减少导出 Excel 后的模糊感。
-    const renderScale = 2;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(targetWidth * renderScale));
-    canvas.height = Math.max(1, Math.round(targetHeight * renderScale));
-
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) throw new Error("Canvas is not available");
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(
-      image,
-      sourceX,
-      sourceY,
-      cropWidth,
-      cropHeight,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-
-    return canvas.toDataURL("image/jpeg", 0.9);
   }
 
   function captureTemplateRows(sheet) {

@@ -252,8 +252,7 @@ textarea:focus {
 .photo-box img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
   background: #f1f4f2;
 }
 
@@ -409,8 +408,7 @@ textarea:focus {
 .record-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
 }
 
 .record-thumb-empty {
