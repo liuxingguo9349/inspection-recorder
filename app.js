@@ -40,6 +40,7 @@
     description: document.getElementById("description"),
     remarks: document.getElementById("remarks"),
     issuePhotoBox: document.getElementById("issuePhotoBox"),
+    issueCameraInput: document.getElementById("issueCameraInput"),
     issuePhotoInput: document.getElementById("issuePhotoInput"),
     issuePhotoPreview: document.getElementById("issuePhotoPreview"),
     issuePhotoEmpty: document.getElementById("issuePhotoEmpty"),
@@ -87,6 +88,7 @@
         els.issuePhotoInput.click();
       }
     });
+    els.issueCameraInput.addEventListener("change", (event) => handlePhotoChange(event, "issue"));
     els.issuePhotoInput.addEventListener("change", (event) => handlePhotoChange(event, "issue"));
     els.removeIssuePhotoBtn.addEventListener("click", () => clearDraftPhoto("issue"));
     els.recordList.addEventListener("click", handleRecordListClick);
@@ -216,6 +218,7 @@
 
   function clearDraftPhoto(kind) {
     setDraftPhoto(kind, "", "", 0);
+    els.issueCameraInput.value = "";
     els.issuePhotoInput.value = "";
     renderPhotoPreview(kind, "");
   }
@@ -285,6 +288,7 @@
     state.draftIssuePhotoDataUrl = "";
     state.draftIssuePhotoName = "";
     state.draftIssuePhotoSize = 0;
+    els.issueCameraInput.value = "";
     els.issuePhotoInput.value = "";
     renderPhotoPreview("issue", "");
     setDefaultTime();
@@ -511,7 +515,7 @@
         buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
         buffer = await workbook.xlsx.writeBuffer();
       }
-      const filename = `达沃斯重点保障区域市容整治包保检查问题-${formatFileDate(new Date())}.xlsx`;
+      const filename = `${formatMonthDay(new Date())}老虎滩-市委-南山路商业街检查问题.xlsx`;
       stage = "下载 Excel";
       downloadBlob(
         new Blob([buffer], {
@@ -667,7 +671,23 @@
   }
 
   function buildExportTitle(date = new Date()) {
-    return `${EXPORT_TITLE_PREFIX}\n（${formatMonthDay(date)}）`;
+    const titleFont = {
+      name: "宋体",
+      size: 24,
+      bold: true,
+      color: { argb: "FF000000" },
+      charset: 134,
+    };
+    const dateSuffix = `（${formatMonthDay(date)}）`;
+
+    // 日期作为一个完整文本段写入，不在括号和数字之间插入任何隐藏字符。
+    // 因此显示为紧凑的“（0710）”，同时保持与原标题一致的宋体样式。
+    return {
+      richText: [
+        { text: EXPORT_TITLE_PREFIX, font: { ...titleFont } },
+        { text: dateSuffix, font: { ...titleFont } },
+      ],
+    };
   }
 
   function addPhotoToSheet(workbook, sheet, dataUrl, rowNumber, excelColumn, dimensions) {
@@ -680,17 +700,24 @@
       extension,
     });
 
-    // 直接把完整照片拉伸到单元格的四条边：不裁剪、不留白。
-    // 这里使用单元格坐标作为右下锚点，因此不会改变任何行高、列宽或表格样式。
+    // 保留完整图片，不裁剪；允许横向和纵向拉伸，填满原有照片单元格。
+    // 只把左、上边缘向单元格内收少量像素，避免图片遮住左边框和上边框。
+    // 表格的行高、列宽、字体、边框及其他样式均不改变。
+    const boxWidth = columnWidthToPixels(sheet.getColumn(excelColumn).width);
+    const boxHeight = rowHeightToPixels(sheet.getRow(rowNumber).height);
+    const leftInsetPx = 1.5;
+    const topInsetPx = 1.5;
+
     sheet.addImage(imageId, {
       tl: {
-        col: excelColumn - 1,
-        row: rowNumber - 1,
+        col: excelColumn - 1 + leftInsetPx / boxWidth,
+        row: rowNumber - 1 + topInsetPx / boxHeight,
       },
       br: {
         col: excelColumn,
         row: rowNumber,
       },
+      editAs: "oneCell",
     });
   }
 

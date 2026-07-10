@@ -7,7 +7,7 @@
     <title>问题记录</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css?v=12" />
+    <link rel="stylesheet" href="./styles.css?v=14" />
   </head>
   <body data-mobile-tab="form">
     <div class="app-shell">
@@ -78,15 +78,20 @@
                   </div>
                 </div>
                 <div class="photo-actions">
-                  <label class="primary-button file-action" for="issuePhotoInput" title="拍照或选择问题照片">
+                  <label class="primary-button file-action" for="issueCameraInput" title="使用后置相机拍摄问题照片">
                     <i data-lucide="camera"></i>
-                    <span>拍照/选图</span>
+                    <span>拍照</span>
+                  </label>
+                  <label class="ghost-button file-action" for="issuePhotoInput" title="从相册或文件中选择问题照片">
+                    <i data-lucide="image"></i>
+                    <span>选图</span>
                   </label>
                   <button class="ghost-button" id="removeIssuePhotoBtn" type="button" title="移除问题照片">
                     <i data-lucide="image-off"></i>
                     <span>移除</span>
                   </button>
-                  <input id="issuePhotoInput" class="sr-only" type="file" accept="image/*" capture="environment" />
+                  <input id="issueCameraInput" class="sr-only" type="file" accept="image/*" capture="environment" />
+                  <input id="issuePhotoInput" class="sr-only" type="file" accept="image/*" />
                 </div>
               </div>
 
@@ -175,6 +180,6 @@
 
     <script src="./assets/exceljs.min.js"></script>
     <script src="./assets/lucide.min.js"></script>
-    <script src="./app.js?v=12"></script>
+    <script src="./app.js?v=18"></script>
   </body>
 </html>
