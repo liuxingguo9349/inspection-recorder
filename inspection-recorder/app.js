@@ -5,12 +5,13 @@
   const DB_VERSION = 1;
   const STORE_NAME = "records";
   const SELECTION_KEY = "inspection-recorder-selection";
+  const MOBILE_TAB_KEY = "inspection-recorder-mobile-tab";
   const TEMPLATE_URL = "./assets/template.xlsx";
   const TYPES = ["市政", "市容", "环卫", "绿化", "执法", "其他"];
   const IMAGE_MAX_EDGE = 1800;
   const IMAGE_JPEG_QUALITY = 0.82;
   const IMAGE_COMPRESSION_THRESHOLD = 1.5 * 1024 * 1024;
-  const EXPORT_TITLE_PREFIX = "达沃斯重点保障区域市容整治包保检查问题";
+  const EXPORT_TITLE_PREFIX = "重点保障区域市容整治包保检查问题";
   const EXPORT_HEADERS = ["序号", "问题类型", "问题简要描述", "问题照片", "整改照片", "备注"];
   const EXPORT_LAYOUT = {
     columnCount: 6,
@@ -38,6 +39,8 @@
     recordTime: document.getElementById("recordTime"),
     description: document.getElementById("description"),
     remarks: document.getElementById("remarks"),
+    issuePhotoBox: document.getElementById("issuePhotoBox"),
+    issueCameraInput: document.getElementById("issueCameraInput"),
     issuePhotoInput: document.getElementById("issuePhotoInput"),
     issuePhotoPreview: document.getElementById("issuePhotoPreview"),
     issuePhotoEmpty: document.getElementById("issuePhotoEmpty"),
@@ -52,10 +55,13 @@
     exportBtn: document.getElementById("exportBtn"),
     selectAllBtn: document.getElementById("selectAllBtn"),
     clearSelectBtn: document.getElementById("clearSelectBtn"),
+    deleteSelectedBtn: document.getElementById("deleteSelectedBtn"),
     searchInput: document.getElementById("searchInput"),
     filterType: document.getElementById("filterType"),
     backupBtn: document.getElementById("backupBtn"),
     restoreInput: document.getElementById("restoreInput"),
+    mobileExportBtn: document.getElementById("mobileExportBtn"),
+    mobileTabButtons: document.querySelectorAll("[data-mobile-tab]"),
     toast: document.getElementById("toast"),
   };
 
@@ -75,6 +81,14 @@
     els.form.addEventListener("submit", handleSave);
     els.resetBtn.addEventListener("click", clearForm);
     els.newRecordBtn.addEventListener("click", clearForm);
+    els.issuePhotoBox.addEventListener("click", () => els.issuePhotoInput.click());
+    els.issuePhotoBox.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        els.issuePhotoInput.click();
+      }
+    });
+    els.issueCameraInput.addEventListener("change", (event) => handlePhotoChange(event, "issue"));
     els.issuePhotoInput.addEventListener("change", (event) => handlePhotoChange(event, "issue"));
     els.removeIssuePhotoBtn.addEventListener("click", () => clearDraftPhoto("issue"));
     els.recordList.addEventListener("click", handleRecordListClick);
@@ -83,7 +97,12 @@
     els.filterType.addEventListener("change", renderRecords);
     els.selectAllBtn.addEventListener("click", selectVisibleRecords);
     els.clearSelectBtn.addEventListener("click", clearSelection);
+    els.deleteSelectedBtn.addEventListener("click", deleteSelectedRecords);
     els.exportBtn.addEventListener("click", exportSelectedRecords);
+    els.mobileExportBtn.addEventListener("click", exportSelectedRecords);
+    els.mobileTabButtons.forEach((button) => {
+      button.addEventListener("click", () => switchMobileTab(button.dataset.mobileTab));
+    });
     els.backupBtn.addEventListener("click", exportBackup);
     els.restoreInput.addEventListener("change", importBackup);
   }
@@ -199,6 +218,7 @@
 
   function clearDraftPhoto(kind) {
     setDraftPhoto(kind, "", "", 0);
+    els.issueCameraInput.value = "";
     els.issuePhotoInput.value = "";
     renderPhotoPreview(kind, "");
   }
@@ -257,6 +277,7 @@
     renderPhotoPreview("issue", state.draftIssuePhotoDataUrl);
     els.editorTitle.textContent = "编辑记录";
     els.saveBtn.querySelector("span").textContent = "保存修改";
+    switchMobileTab("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -267,11 +288,13 @@
     state.draftIssuePhotoDataUrl = "";
     state.draftIssuePhotoName = "";
     state.draftIssuePhotoSize = 0;
+    els.issueCameraInput.value = "";
     els.issuePhotoInput.value = "";
     renderPhotoPreview("issue", "");
     setDefaultTime();
     els.editorTitle.textContent = "新增记录";
     els.saveBtn.querySelector("span").textContent = "保存记录";
+    switchMobileTab("form");
   }
 
   function setDefaultTime() {
@@ -316,7 +339,28 @@
     els.recordCount.textContent = `${state.records.length} 条，已选 ${selectedCount} 条`;
     els.statusLine.textContent = `浏览器本地库 ${state.records.length} 条`;
     els.exportBtn.disabled = selectedCount === 0;
+    els.mobileExportBtn.disabled = selectedCount === 0;
+    els.deleteSelectedBtn.disabled = selectedCount === 0;
+    updateMobileTabs();
     renderIcons();
+  }
+
+  function switchMobileTab(tab) {
+    const nextTab = tab === "list" ? "list" : "form";
+    document.body.dataset.mobileTab = nextTab;
+    localStorage.setItem(MOBILE_TAB_KEY, nextTab);
+    updateMobileTabs();
+    if (window.matchMedia("(max-width: 720px)").matches) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }
+
+  function updateMobileTabs() {
+    const current = document.body.dataset.mobileTab || localStorage.getItem(MOBILE_TAB_KEY) || "form";
+    document.body.dataset.mobileTab = current === "list" ? "list" : "form";
+    els.mobileTabButtons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.mobileTab === document.body.dataset.mobileTab);
+    });
   }
 
   function createRecordCard(rawRecord) {
@@ -410,6 +454,23 @@
     renderRecords();
   }
 
+  async function deleteSelectedRecords() {
+    const selected = state.records.filter((record) => state.selectedIds.has(record.id));
+    if (!selected.length) {
+      showToast("先选择要删除的记录");
+      return;
+    }
+    const ok = window.confirm(`删除选中的 ${selected.length} 条记录？`);
+    if (!ok) return;
+    for (const record of selected) {
+      await deleteRecord(record.id);
+    }
+    state.selectedIds.clear();
+    saveSelection();
+    await refreshRecords();
+    showToast(`已删除 ${selected.length} 条记录`);
+  }
+
   async function exportSelectedRecords() {
     const selected = state.records.filter((record) => state.selectedIds.has(record.id)).map(normalizeRecord);
     if (!selected.length) {
@@ -454,7 +515,7 @@
         buildWorkbookSheet(workbook, sheet, selected, dimensionsById, warnings);
         buffer = await workbook.xlsx.writeBuffer();
       }
-      const filename = `达沃斯重点保障区域市容整治包保检查问题-${formatFileDate(new Date())}.xlsx`;
+      const filename = `${formatMonthDay(new Date())}老虎滩-市委-南山路商业街检查问题.xlsx`;
       stage = "下载 Excel";
       downloadBlob(
         new Blob([buffer], {
@@ -610,35 +671,51 @@
   }
 
   function buildExportTitle(date = new Date()) {
-    return `${EXPORT_TITLE_PREFIX}\n（${formatMonthDay(date)}）`;
+    const titleFont = {
+      name: "宋体",
+      size: 24,
+      bold: true,
+      color: { argb: "FF000000" },
+      charset: 134,
+    };
+    const dateSuffix = `（${formatMonthDay(date)}）`;
+
+    // 日期作为一个完整文本段写入，不在括号和数字之间插入任何隐藏字符。
+    // 因此显示为紧凑的“（0710）”，同时保持与原标题一致的宋体样式。
+    return {
+      richText: [
+        { text: EXPORT_TITLE_PREFIX, font: { ...titleFont } },
+        { text: dateSuffix, font: { ...titleFont } },
+      ],
+    };
   }
 
   function addPhotoToSheet(workbook, sheet, dataUrl, rowNumber, excelColumn, dimensions) {
     if (typeof dataUrl !== "string" || !dataUrl.startsWith("data:image/")) {
       throw new Error("照片数据格式不正确");
     }
-    const safeDimensions = dimensions || { width: 4, height: 3 };
     const extension = dataUrl.includes("image/png") ? "png" : "jpeg";
     const imageId = workbook.addImage({
       base64: dataUrl,
       extension,
     });
+
+    // 保留完整图片，不裁剪；允许横向和纵向拉伸，填满原有照片单元格。
+    // 只把左、上边缘向单元格内收少量像素，避免图片遮住左边框和上边框。
+    // 表格的行高、列宽、字体、边框及其他样式均不改变。
     const boxWidth = columnWidthToPixels(sheet.getColumn(excelColumn).width);
     const boxHeight = rowHeightToPixels(sheet.getRow(rowNumber).height);
-    const padding = EXPORT_LAYOUT.photoPaddingPx;
-    const maxWidth = boxWidth - padding * 2;
-    const maxHeight = boxHeight - padding * 2;
-    const fit = fitInside(safeDimensions.width, safeDimensions.height, maxWidth, maxHeight);
-    const offsetX = padding + (maxWidth - fit.width) / 2;
-    const offsetY = padding + (maxHeight - fit.height) / 2;
+    const leftInsetPx = 1.5;
+    const topInsetPx = 1.5;
+
     sheet.addImage(imageId, {
       tl: {
-        col: excelColumn - 1 + offsetX / boxWidth,
-        row: rowNumber - 1 + offsetY / boxHeight,
+        col: excelColumn - 1 + leftInsetPx / boxWidth,
+        row: rowNumber - 1 + topInsetPx / boxHeight,
       },
-      ext: {
-        width: fit.width,
-        height: fit.height,
+      br: {
+        col: excelColumn,
+        row: rowNumber,
       },
       editAs: "oneCell",
     });
