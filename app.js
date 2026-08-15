@@ -11,7 +11,7 @@
   const IMAGE_MAX_EDGE = 1800;
   const IMAGE_JPEG_QUALITY = 0.82;
   const IMAGE_COMPRESSION_THRESHOLD = 1.5 * 1024 * 1024;
-  const EXPORT_TITLE_PREFIX = "达沃斯重点保障区域市容整治包保检查问题";
+  const EXPORT_TITLE_PREFIX = "重点保障区域市容整治包保检查问题";
   const EXPORT_HEADERS = ["序号", "问题类型", "问题简要描述", "问题照片", "整改照片", "备注"];
   const EXPORT_LAYOUT = {
     columnCount: 6,
